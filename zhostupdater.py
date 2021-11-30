@@ -4,7 +4,12 @@
 # pyzabbix is needed, see https://github.com/lukecyca/pyzabbix
 #
 import argparse
-import ConfigParser
+try:
+    # Python2
+    import ConfigParser
+except ImportError:
+    # Python3
+    import configparser as ConfigParser
 import os
 import os.path
 import sys
@@ -19,7 +24,7 @@ def ConfigSectionMap(section):
         try:
             dict1[option] = Config.get(section, option)
             if dict1[option] == -1:
-                    DebugPrint("skip: %s" % option)
+                DebugPrint("skip: %s" % option)
         except:
             print("exception on %s!" % option)
             dict1[option] = None
@@ -53,7 +58,7 @@ parser.add_argument('host', help='Host to update in zabbix')
 parser.add_argument('-u', '--username', help='User for the Zabbix api')
 parser.add_argument('-p', '--password', help='Password for the Zabbix api user')
 parser.add_argument('-a', '--api', help='Zabbix API URL')
-parser.add_argument('--no-verify', help='Disables certificate validation when using a secure connection',action='store_true') 
+parser.add_argument('--no-verify', help='Disables certificate validation when using a secure connection',action='store_true')
 parser.add_argument('-c','--config', help='Config file location (defaults to $HOME/.zbx.conf)')
 parser.add_argument('-N', '--name', help='Update hostname')
 group.add_argument('-V', '--visible-name', help='Update visible name')
@@ -73,51 +78,51 @@ Config
 
 # if configuration argument is set, test the config file
 if args.config:
-        if os.path.isfile(args.config) and os.access(args.config, os.R_OK):
-                Config.read(args.config)
+    if os.path.isfile(args.config) and os.access(args.config, os.R_OK):
+        Config.read(args.config)
 
 # if not set, try default config file
 else:
-        if os.path.isfile(defconf) and os.access(defconf, os.R_OK):
-                Config.read(defconf)
+    if os.path.isfile(defconf) and os.access(defconf, os.R_OK):
+        Config.read(defconf)
 
 # try to load available settings from config file
 try:
-        username=ConfigSectionMap("Zabbix API")['username']
-        password=ConfigSectionMap("Zabbix API")['password']
-        api=ConfigSectionMap("Zabbix API")['api']
-        noverify=bool(distutils.util.strtobool(ConfigSectionMap("Zabbix API")["no_verify"]))
+    username=ConfigSectionMap("Zabbix API")['username']
+    password=ConfigSectionMap("Zabbix API")['password']
+    api=ConfigSectionMap("Zabbix API")['api']
+    noverify=bool(distutils.util.strtobool(ConfigSectionMap("Zabbix API")["no_verify"]))
 except:
-        pass
+    pass
 
 # override settings if they are provided as arguments
 if args.username:
-        username = args.username
+    username = args.username
 
 if args.password:
-        password = args.password
+    password = args.password
 
 if args.api:
-        api = args.api
+    api = args.api
 
 if args.no_verify:
-        noverify = args.no_verify
+    noverify = args.no_verify
 
 # test for needed params
 if not username:
-        sys.exit("Error: API User not set")
+    sys.exit("Error: API User not set")
 
 if not password:
-        sys.exit("Error: API Password not set")
+    sys.exit("Error: API Password not set")
 
 if not api:
-        sys.exit("Error: API URL is not set")
+    sys.exit("Error: API URL is not set")
 
 # Setup Zabbix API connection
 zapi = ZabbixAPI(api)
 
 if noverify is True:
-        zapi.session.verify = False
+    zapi.session.verify = False
 
 # Login to the Zabbix API
 zapi.login(username, password)
@@ -132,150 +137,150 @@ host_name = args.host
 # setup call dict
 call={}
 
-if host_name: 
+if host_name:
     # Find matching hosts
-    hosts = zapi.host.get(output="extend", selectGroups="extend", selectMacros="extend", filter={"host":host_name}) 
+    hosts = zapi.host.get(output="extend", selectGroups="extend", selectMacros="extend", filter={"host":host_name})
     if hosts:
-      # Basic API call params
-      call["hostid"]=hosts[0]["hostid"]
-      # Current raw list of macros for the host
-      curmac=hosts[0]["macros"]
-      # Current list of groups for the host
-      curgrp=hosts[0]["groups"]
+        # Basic API call params
+        call["hostid"]=hosts[0]["hostid"]
+        # Current raw list of macros for the host
+        curmac=hosts[0]["macros"]
+        # Current list of groups for the host
+        curgrp=hosts[0]["groups"]
 
 
-      # Set names if specified
-      if args.name:
-              call["host"]=args.name
-              if args.sync_names:
-                     call["name"]=args.name
-      elif args.visible_name:
-              call["name"]=args.visible_name
-      elif args.sync_names:
-              call["name"]=args.host
+        # Set names if specified
+        if args.name:
+            call["host"]=args.name
+            if args.sync_names:
+                call["name"]=args.name
+        elif args.visible_name:
+            call["name"]=args.visible_name
+        elif args.sync_names:
+            call["name"]=args.host
 
-      # update inventory fields
-      if args.inventory:
-              zbxinv={}
-              for field in args.inventory:
-                      if '=' in field:
-                              field=field.split('=')
-                              zbxinv[field[0]]=field[1]
-                      else:
-                              sys.exit("Error: Inventory \""+ field + "\" is not valid")
-              call["inventory"]=zbxinv 
+        # update inventory fields
+        if args.inventory:
+            zbxinv={}
+            for field in args.inventory:
+                if '=' in field:
+                    field=field.split('=')
+                    zbxinv[field[0]]=field[1]
+                else:
+                    sys.exit("Error: Inventory \""+ field + "\" is not valid")
+            call["inventory"]=zbxinv
 
-      # update or add macros
-      if args.macros:
-              zbxmac=[]
-              for field in args.macros:
-                      if '=' in field:
-                             # Create macro object with proper value
-                             field=field.split('=')
-                             if ':' in field[0]:
-                                   # context-macro contains ':', only uppercase macro name
-                                   name=unicode("{$" + field[0].split(':')[0].upper() + ':' + field[0].split(':')[1] + "}")
-                             else:
-                                   name=unicode("{$" + field[0].upper() + "}")
-                             value=unicode(field[1])
-                             macro={"macro":name,"value":value}
-                             zbxmac.append(macro)
-                      else:
-                             sys.exit("Error: Macro \""+ field + "\" is not valid")
+        # update or add macros
+        if args.macros:
+            zbxmac=[]
+            for field in args.macros:
+                if '=' in field:
+                    # Create macro object with proper value
+                    field=field.split('=')
+                    if ':' in field[0]:
+                        # context-macro contains ':', only uppercase macro name
+                        name=unicode("{$" + field[0].split(':')[0].upper() + ':' + field[0].split(':')[1] + "}")
+                    else:
+                        name=unicode("{$" + field[0].upper() + "}")
+                    value=unicode(field[1])
+                    macro={"macro":name,"value":value}
+                    zbxmac.append(macro)
+                else:
+                    sys.exit("Error: Macro \""+ field + "\" is not valid")
 
-              # Itterate over the current macros and append them to the list, unless we just added an updated value
-              for line in curmac:
-                      name=line['macro']
-                      value=line['value']
-                      macro={"macro":name,"value":value}
-                      if not any(check.get('macro', None) == name for check in zbxmac): 
-                             zbxmac.append(macro)
-      elif args.remove_macros:
-              zbxmac=[]
-              remmac=[]
-              # Create a list of macros to be removed
-              for field in args.remove_macros:
-                      # find macro name
-                      name=unicode("{$" + field.upper() + "}")
-                      macro={"macro":name}
-                      remmac.append(macro)
+            # Itterate over the current macros and append them to the list, unless we just added an updated value
+            for line in curmac:
+                name=line['macro']
+                value=line['value']
+                macro={"macro":name,"value":value}
+                if not any(check.get('macro', None) == name for check in zbxmac):
+                    zbxmac.append(macro)
+        elif args.remove_macros:
+            zbxmac=[]
+            remmac=[]
+            # Create a list of macros to be removed
+            for field in args.remove_macros:
+                # find macro name
+                name=unicode("{$" + field.upper() + "}")
+                macro={"macro":name}
+                remmac.append(macro)
 
-              # itterate over the current macros and append them to the list, unless the macro is listed in the macros to be removed
-              for line in curmac:
-                      name=line['macro']
-                      value=line['value']
-                      macro={"macro":name,"value":value}
-                      if not any(check.get('macro', None) == name for check in remmac): 
-                             zbxmac.append(macro)
+            # itterate over the current macros and append them to the list, unless the macro is listed in the macros to be removed
+            for line in curmac:
+                name=line['macro']
+                value=line['value']
+                macro={"macro":name,"value":value}
+                if not any(check.get('macro', None) == name for check in remmac):
+                    zbxmac.append(macro)
 
-      # Add macros to the API call if defined
-      try:
-              if zbxmac:
-                      call["macros"]=zbxmac 
-      except:
-              pass
+        # Add macros to the API call if defined
+        try:
+            if zbxmac:
+                call["macros"]=zbxmac
+        except:
+            pass
 
-      # Set host status
-      if args.enable:
-              call["status"]=0
-      elif args.disable:
-              call["status"]=1
+        # Set host status
+        if args.enable:
+            call["status"]=0
+        elif args.disable:
+            call["status"]=1
 
 
-      # add or remove host groups
-      if args.groups:
-              zbxgrp=[]
-              for field in args.groups:
-                      getgroup=zapi.hostgroup.get(filter={'name':field})
-                      if getgroup:
-                              groupid=getgroup[0]['groupid']
-                              group={u'name':unicode(field), u'groupid':groupid}
-                              zbxgrp.append(group)
-                      else:
-                              sys.exit("Error: Could not find hostgroup \""+ field + "\"")
+        # add or remove host groups
+        if args.groups:
+            zbxgrp=[]
+            for field in args.groups:
+                getgroup=zapi.hostgroup.get(filter={'name':field})
+                if getgroup:
+                    groupid=getgroup[0]['groupid']
+                    group={u'name':unicode(field), u'groupid':groupid}
+                    zbxgrp.append(group)
+                else:
+                    sys.exit("Error: Could not find hostgroup \""+ field + "\"")
 
-              # Itterate over the current groups and append them to the list, unless we just added an updated value
-              for line in curgrp:
-                      group={u"name":line['name'],u"groupid":line['groupid']}
-                      if group not in zbxgrp: 
-                             zbxgrp.append(group)
+            # Itterate over the current groups and append them to the list, unless we just added an updated value
+            for line in curgrp:
+                group={u"name":line['name'],u"groupid":line['groupid']}
+                if group not in zbxgrp:
+                    zbxgrp.append(group)
 
-      elif args.remove_groups:
-              zbxgrp=[]
-              remgrp=[]
-              # Create a list of groups to be removed
-              for field in args.remove_groups:
-                      name=unicode(field)
-                      group={u'name':name}
-                      remgrp.append(group)
+        elif args.remove_groups:
+            zbxgrp=[]
+            remgrp=[]
+            # Create a list of groups to be removed
+            for field in args.remove_groups:
+                name=unicode(field)
+                group={u'name':name}
+                remgrp.append(group)
 
-              # itterate over the current groups and append them to the list, unless the group is listed in the groups to be removed
-              for line in curgrp:
-                      name=line['name']
-                      groupid=line['groupid']
-                      group={u"name":name,u"groupid":groupid}
-                      if not any(check.get('name', None) == name for check in remgrp): 
-                              zbxgrp.append(group)
+            # itterate over the current groups and append them to the list, unless the group is listed in the groups to be removed
+            for line in curgrp:
+                name=line['name']
+                groupid=line['groupid']
+                group={u"name":name,u"groupid":groupid}
+                if not any(check.get('name', None) == name for check in remgrp):
+                    zbxgrp.append(group)
 
-      # Add groups to the API call if defined
-      try:
-    	     if zbxgrp:
-                      call["groups"]=zbxgrp 
-      except:
-             pass
+        # Add groups to the API call if defined
+        try:
+            if zbxgrp:
+                call["groups"]=zbxgrp
+        except:
+            pass
 
     else:
-            sys.exit("Error: Could not find host \""+ host_name + "\"")
+        sys.exit("Error: Could not find host \""+ host_name + "\"")
 
     # Perform API call
     try:
-            result=zapi.host.update(**call)
+        result=zapi.host.update(**call)
     except:
-            sys.exit("Error: Host \""+ host_name + "\" could not be updated")
+        sys.exit("Error: Host \""+ host_name + "\" could not be updated")
 
     if result['hostids'][0] != hosts[0]["hostid"]:
-            sys.exit("Error: Host \""+ host_name + "\" could not be updated")
+        sys.exit("Error: Host \""+ host_name + "\" could not be updated")
 
 else:
-        sys.exit("Error: No hosts to find")
+    sys.exit("Error: No hosts to find")
 # And we're done...

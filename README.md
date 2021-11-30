@@ -6,40 +6,40 @@ A collection of various scripts to automate tasks with the Zabbix API. My main g
 All of these tools can be invoked with `-h/--help` to get help.
 
 ### API tools:
-- `zapi.py` -		Interactive Zabbix API client.
+- `zapi.py` -           Interactive Zabbix API client.
 
 ### History related:
-- `zgethistory.py` -	Gets values from history for an itemid.
+- `zgethistory.py` -    Gets values from history for an itemid.
 
 ### Inv related:
-- `zhinvswitcher.py` - 	Switches inv. mode on host(group)s.
+- `zhinvswitcher.py` -  Switches inv. mode on host(group)s.
 - `zgetinventory.py` -  Prints host inventory in CSV format.
 - `zhostupdater.py` - Updates host properties.
 
 ### Item related:
-- `zhitemfinder.py` -	Finds items on a host.	
-- `zgethistory.py` - 	Get item values from history (Trends are not supported!).
+- `zhitemfinder.py` -   Finds items on a host.
+- `zgethistory.py` -    Get item values from history (Trends are not supported!).
 
 ### Graph related:
-- `zhgraphfinder.py` - 	Finds graphs configured on a Zabbix host.
-- `zgetgraph.py` - 	Downloads a graph .PNG from the Zabbix frontend (needs user frontend access) and saves it.
+- `zhgraphfinder.py` -  Finds graphs configured on a Zabbix host.
+- `zgetgraph.py` -      Downloads a graph .PNG from the Zabbix frontend (needs user frontend access) and saves it.
 
 ### Group related:
-- `zghostfinder.py` -	Finds member hosts in a hostgroup.
+- `zghostfinder.py` -   Finds member hosts in a hostgroup.
 
 ### Host related:
 - `zhostfinder.py`  -   Finds hosts in Zabbix based on search string.
 - `zhostupdater.py` -   Updates hosts properties.
 
 ### Proxy related:
-- `zhproxyfinder.py` -	Finds configured proxy for a Zabbix host.
+- `zhproxyfinder.py` -  Finds configured proxy for a Zabbix host.
 
 ### Template related:
 - `ztmplimport.py`  -   Imports .xml template into zabbix
-- `zhtmplfinder.py` - 	Finds linked templates for a Zabbix host.
-- `zthostfinder.py` - 	Finds hosts that are linked to a template.
-- `zthtmllinker.py` - 	Links host(group)s to a list of templates.
-- `zthtmlunlink.py` - 	Unlinks host(group)s from a list of templates.
+- `zhtmplfinder.py` -   Finds linked templates for a Zabbix host.
+- `zthostfinder.py` -   Finds hosts that are linked to a template.
+- `zthtmllinker.py` -   Links host(group)s to a list of templates.
+- `zthtmlunlink.py` -   Unlinks host(group)s from a list of templates.
 
 ### Trigger related:
 - `zhtrigfinder.py` -   Finds triggers on a host.
@@ -85,7 +85,7 @@ Usage examples
 
 `graphid=$(./zhgraphfinder.py -e server.example.com | grep 'CPU load' | cut -d ':' -f 1) ./zgetgraph.py -s $(date --date 'jan 1 2014' +%s) -t 2678400 -f ~/jan.png $graphid`
 
-Take note that this requires GNU `date`. 
+Take note that this requires GNU `date`.
 
 ##### Using zproxyfinder.py to use the proper Zabbix proxy in a zabbix_sender script.
 
@@ -153,7 +153,7 @@ zabbix_sender -k $ITEMKEY -o $ITEMVALUE -s $HOSTNAME -z $(zhproxyfinder.py $HOST
 ./zghostfinder.py "Customer A" | grep -i '^web.*'
 ```
 
-##### Print the last known value for the available memory in Bytes on the host 'Webserver' 
+##### Print the last known value for the available memory in Bytes on the host 'Webserver'
 ```
 ./zgethistory.py -C 1 $(./zhitemfinder.py -k 'vm.memory.size[available]' -n Webserver)
 ```
@@ -180,7 +180,7 @@ zabbix_sender -k $ITEMKEY -o $ITEMVALUE -s $HOSTNAME -z $(zhproxyfinder.py $HOST
 
 ##### Find all PROBLEM events during the last hour for the the hosts in the group 'Linux Servers' (Limited to 100 events)
 ```
-./zeventfinder.py -P -t 3600 -G 'Linux Servers' 
+./zeventfinder.py -P -t 3600 -G 'Linux Servers'
 ```
 
 ##### Acknowledge 3 events with the message "Power outage"
@@ -188,14 +188,14 @@ zabbix_sender -k $ITEMKEY -o $ITEMVALUE -s $HOSTNAME -z $(zhproxyfinder.py $HOST
 ./zeventacker.py -m "Power outage" 6578 6689 6590
 ```
 
-##### Print details on 3 events including trigger comments, actions and acknowledgements 
+##### Print details on 3 events including trigger comments, actions and acknowledgements
 ```
-./zgetevent.py -ACL 6578 6689 6590 
+./zgetevent.py -ACL 6578 6689 6590
 ```
 
 ##### Acknowledge all PROBLEM events in the last 15 minutes for the hosts in the 'Linux Serves' group
 ```
-./zeventacker.py -m 'Foobar with Fabric :-(' $(./zeventfinder.py -i -P -t 900 -G 'Linux servers') 
+./zeventacker.py -m 'Foobar with Fabric :-(' $(./zeventfinder.py -i -P -t 900 -G 'Linux servers')
 ```
 
 ##### Follow Zabbix trigger events for all hosts
@@ -210,84 +210,82 @@ Logging in on 'https://zabbix.example.com/' with user 'Admin'.
 Welcome to the interactive Zabbix API client.
 zapi: z host.get(filter={"host": "Zabbix Server"})
 [{u'hostid': u'1001'}]
-zapi: 
+zapi:
 ```
 
 ## List of inventory fields
 Please see the Zabbix manual for your version of Zabbix for the latest list of supported fields, these are only here for your convience.
 
 
-|Property 		|Description|
-|-----------------------|-----------| 	
-|alias 			|Alias.|
-|asset_tag 		|Asset tag.|
-|chassis 		|Chassis.|
-|contact 		|Contact person.|
-|contract_number 	|Contract number.|
-|date_hw_decomm 	|HW decommissioning date.|
-|date_hw_expiry 	|HW maintenance expiry date.|
-|date_hw_install 	|HW installation date.|
-|date_hw_purchase 	|HW purchase date.|
-|deployment_status 	|Deployment status.|
-|hardware 		|Hardware.|
-|hardware_full 		|Detailed hardware.|
-|host_netmask 		|Host subnet mask.|
-|host_networks 		|Host networks.|
-|host_router 		|Host router.|
-|hw_arch 		|HW architecture.|
-|installer_name 	|Installer name.|
-|location 		|Location.|
-|location_lat 		|Location latitude.|
-|location_lon 		|Location longitude.|
-|macaddress_a 		|MAC address A.|
-|macaddress_b 		|MAC address B.|
-|model 			|Model.|
-|name 			|Name.|
-|notes 			|Notes.|
-|oob_ip 		|OOB IP address.|
-|oob_netmask 		|OOB host subnet mask.|
-|oob_router 		|OOB router.|
-|os 			|OS name.|
-|os_full 		|Detailed OS name.|
-|os_short 		|Short OS name.|
-|poc_1_cell 		|Primary POC mobile number.|
-|poc_1_email 		|Primary email.|
-|poc_1_name 		|Primary POC name.|
-|poc_1_notes 		|Primary POC notes.|
-|poc_1_phone_a 		|Primary POC phone A.|
-|poc_1_phone_b 		|Primary POC phone B.|
-|poc_1_screen  	  	|Primary POC screen name.|
-|poc_2_cell    	  	|Secondary POC mobile number.|
-|poc_2_email   	  	|Secondary POC email.|
-|poc_2_name    	  	|Secondary POC name.|
-|poc_2_notes   	  	|Secondary POC notes.|
-|poc_2_phone_a 		|Secondary POC phone A.|
-|poc_2_phone_b 		|Secondary POC phone B.|
-|poc_2_screen  	  	|Secondary POC screen name.|
-|serialno_a    	  	|Serial number A.|
-|serialno_b    	  	|Serial number B.|
-|site_address_a	 	|Site address A.|
-|site_address_b	 	|Site address B.|
-|site_address_c	 	|Site address C.|
-|site_city     	  	|Site city.|
-|site_country  	  	|Site country.|
-|site_notes    	  	|Site notes.|
-|site_rack     	  	|Site rack location.|
-|site_state    	  	|Site state.|
-|site_zip      	  	|Site ZIP/postal code.|
-|software      	  	|Software.|
-|software_app_a	 	|Software application A.|
-|software_app_b	 	|Software application B.|
-|software_app_c	 	|Software application C.|
-|software_app_d	 	|Software application D.|
-|software_app_e	 	|Software application E.|
-|software_full 		|Software details.|
-|tag 			|Tag.|
-|type 			|Type.|
-|type_full 		|Type details.|
-|url_a 			|URL A.|
-|url_b 			|URL B.|
-|url_c 			|URL C.|
-|vendor 		|Vendor.|  
-
-
+|Property               |Description|
+|-----------------------|-----------|
+|alias                  |Alias.|
+|asset_tag              |Asset tag.|
+|chassis                |Chassis.|
+|contact                |Contact person.|
+|contract_number        |Contract number.|
+|date_hw_decomm         |HW decommissioning date.|
+|date_hw_expiry         |HW maintenance expiry date.|
+|date_hw_install        |HW installation date.|
+|date_hw_purchase       |HW purchase date.|
+|deployment_status      |Deployment status.|
+|hardware               |Hardware.|
+|hardware_full          |Detailed hardware.|
+|host_netmask           |Host subnet mask.|
+|host_networks          |Host networks.|
+|host_router            |Host router.|
+|hw_arch                |HW architecture.|
+|installer_name         |Installer name.|
+|location               |Location.|
+|location_lat           |Location latitude.|
+|location_lon           |Location longitude.|
+|macaddress_a           |MAC address A.|
+|macaddress_b           |MAC address B.|
+|model                  |Model.|
+|name                   |Name.|
+|notes                  |Notes.|
+|oob_ip                 |OOB IP address.|
+|oob_netmask            |OOB host subnet mask.|
+|oob_router             |OOB router.|
+|os                     |OS name.|
+|os_full                |Detailed OS name.|
+|os_short               |Short OS name.|
+|poc_1_cell             |Primary POC mobile number.|
+|poc_1_email            |Primary email.|
+|poc_1_name             |Primary POC name.|
+|poc_1_notes            |Primary POC notes.|
+|poc_1_phone_a          |Primary POC phone A.|
+|poc_1_phone_b          |Primary POC phone B.|
+|poc_1_screen           |Primary POC screen name.|
+|poc_2_cell             |Secondary POC mobile number.|
+|poc_2_email            |Secondary POC email.|
+|poc_2_name             |Secondary POC name.|
+|poc_2_notes            |Secondary POC notes.|
+|poc_2_phone_a          |Secondary POC phone A.|
+|poc_2_phone_b          |Secondary POC phone B.|
+|poc_2_screen           |Secondary POC screen name.|
+|serialno_a             |Serial number A.|
+|serialno_b             |Serial number B.|
+|site_address_a         |Site address A.|
+|site_address_b         |Site address B.|
+|site_address_c         |Site address C.|
+|site_city              |Site city.|
+|site_country           |Site country.|
+|site_notes             |Site notes.|
+|site_rack              |Site rack location.|
+|site_state             |Site state.|
+|site_zip               |Site ZIP/postal code.|
+|software               |Software.|
+|software_app_a         |Software application A.|
+|software_app_b         |Software application B.|
+|software_app_c         |Software application C.|
+|software_app_d         |Software application D.|
+|software_app_e         |Software application E.|
+|software_full          |Software details.|
+|tag                    |Tag.|
+|type                   |Type.|
+|type_full              |Type details.|
+|url_a                  |URL A.|
+|url_b                  |URL B.|
+|url_c                  |URL C.|
+|vendor                 |Vendor.|

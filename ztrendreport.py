@@ -4,7 +4,12 @@
 # pyzabbix is needed, see https://github.com/lukecyca/pyzabbix
 #
 import argparse
-import ConfigParser
+try:
+    # Python2
+    import ConfigParser
+except ImportError:
+    # Python3
+    import configparser as ConfigParser
 import os
 import os.path
 import sys
@@ -20,13 +25,13 @@ def ConfigSectionMap(section):
     dict1 = {}
     options = Config.options(section)
     for option in options:
- 	try:
-		dict1[option] = Config.get(section, option)
-		if dict1[option] == -1:
-			DebugPrint("skip: %s" % option)
-	except:
-		print("exception on %s!" % option)
-		dict1[option] = None
+        try:
+            dict1[option] = Config.get(section, option)
+            if dict1[option] == -1:
+                DebugPrint("skip: %s" % option)
+        except:
+            print("exception on %s!" % option)
+            dict1[option] = None
     return dict1
 
 class UTF8Recoder:
@@ -140,51 +145,51 @@ Config
 
 # if configuration argument is set, test the config file
 if args.config:
- if os.path.isfile(args.config) and os.access(args.config, os.R_OK):
-  Config.read(args.config)
+    if os.path.isfile(args.config) and os.access(args.config, os.R_OK):
+        Config.read(args.config)
 
 # if not set, try default config file
 else:
- if os.path.isfile(defconf) and os.access(defconf, os.R_OK):
-  Config.read(defconf)
+    if os.path.isfile(defconf) and os.access(defconf, os.R_OK):
+        Config.read(defconf)
 
 # try to load available settings from config file
 try:
- username=ConfigSectionMap("Zabbix API")['username']
- password=ConfigSectionMap("Zabbix API")['password']
- api=ConfigSectionMap("Zabbix API")['api']
- noverify=bool(distutils.util.strtobool(ConfigSectionMap("Zabbix API")["no_verify"]))
+    username=ConfigSectionMap("Zabbix API")['username']
+    password=ConfigSectionMap("Zabbix API")['password']
+    api=ConfigSectionMap("Zabbix API")['api']
+    noverify=bool(distutils.util.strtobool(ConfigSectionMap("Zabbix API")["no_verify"]))
 except:
- pass
+    pass
 
 # override settings if they are provided as arguments
 if args.username:
- username = args.username
+    username = args.username
 
 if args.password:
- password = args.password
+    password = args.password
 
 if args.api:
- api = args.api
+    api = args.api
 
 if args.no_verify:
- noverify = args.no_verify
+    noverify = args.no_verify
 
 # test for needed params
 if not username:
- sys.exit("Error: API User not set")
+    sys.exit("Error: API User not set")
 
 if not password:
- sys.exit("Error: API Password not set")
+    sys.exit("Error: API Password not set")
 
 if not api:
- sys.exit("Error: API URL is not set")
+    sys.exit("Error: API URL is not set")
 
 # Setup Zabbix API connection
 zapi = ZabbixAPI(api)
 
 if noverify is True:
- zapi.session.verify = False
+    zapi.session.verify = False
 
 # Login to the Zabbix API
 zapi.login(username, password)
@@ -217,52 +222,52 @@ periodend = datetime(year=datelist[-1].year,
 
 
 if args.all_hosts:
-       # Make a list of all hosts
-       hlookup = zapi.host.get()
+    # Make a list of all hosts
+    hlookup = zapi.host.get()
 else:
-  if args.hostgroups:
-    if args.numeric:
-       # We are getting numeric hostgroup ID's, let put them in a list
-       # (ignore any non digit items)
-       hgids=[s for s in args.hostgroups if s.isdigit()]
-       for hgid in hgids:
-         exists=zapi.hostgroup.exists(groupid=hgid)
-         if not exists:
-            sys.exit("Error: Hostgroupid "+hgid+" does not exist")
+    if args.hostgroups:
+        if args.numeric:
+    # We are getting numeric hostgroup ID's, let put them in a list
+    # (ignore any non digit items)
+            hgids=[s for s in args.hostgroups if s.isdigit()]
+            for hgid in hgids:
+                exists=zapi.hostgroup.exists(groupid=hgid)
+                if not exists:
+                    sys.exit("Error: Hostgroupid "+hgid+" does not exist")
+
+        else:
+            # We are using hostgroup names, let's resolve them to ids.
+            # First, get the named hostgroups via an API call
+            hglookup = zapi.hostgroup.get(filter=({'name':args.hostgroups}))
+
+            # hgids will hold the numeric hostgroup ids
+            hgids = []
+            for hg in range(len(hglookup)):
+                # Create the list of hostgroup ids
+                hgids.append(int(hglookup[hg]['groupid']))
+
+        # Now that we have resolved the hostgroup ids, we can make an API call to retrieve the member hosts
+        hlookup=zapi.host.get(output=['hostid'],monitored_hosts=True,groupids=hgids)
+
+    elif args.hostnames:
+        if args.numeric:
+            # We are getting numeric host ID's, let put them in a list
+            # (ignore any non digit items)
+            hids=[s for s in args.hostnames if s.isdigit()]
+            hlookup=zapi.host.get(output=['hostid'],hostids=hids)
+
+        else:
+            # We are using hostnames, let's resolve them to ids.
+            # Get hosts via an API call
+
+            hlookup=zapi.host.get(output=['hostid'],monitored_hosts=True,filter=({'host':args.hostnames}))
 
     else:
-       # We are using hostgroup names, let's resolve them to ids.
-       # First, get the named hostgroups via an API call
-       hglookup = zapi.hostgroup.get(filter=({'name':args.hostgroups}))
-
-       # hgids will hold the numeric hostgroup ids
-       hgids = []
-       for hg in range(len(hglookup)):
-          # Create the list of hostgroup ids
-          hgids.append(int(hglookup[hg]['groupid']))
-
-    # Now that we have resolved the hostgroup ids, we can make an API call to retrieve the member hosts
-    hlookup=zapi.host.get(output=['hostid'],monitored_hosts=True,groupids=hgids)
-
-  elif args.hostnames:
-    if args.numeric:
-       # We are getting numeric host ID's, let put them in a list
-       # (ignore any non digit items)
-       hids=[s for s in args.hostnames if s.isdigit()]
-       hlookup=zapi.host.get(output=['hostid'],hostids=hids)
-
-    else:
-       # We are using hostnames, let's resolve them to ids.
-       # Get hosts via an API call
-
-       hlookup=zapi.host.get(output=['hostid'],monitored_hosts=True,filter=({'host':args.hostnames}))
-
-  else:
-     #uhm... what were we supposed to do?
-     sys.exit("Error: Nothing to do here")
+        #uhm... what were we supposed to do?
+        sys.exit("Error: Nothing to do here")
 
 if not hlookup:
-     sys.exit("Error: No hosts found")
+    sys.exit("Error: No hosts found")
 
 
 # Convert hlookup to a usable parameter for item.get
